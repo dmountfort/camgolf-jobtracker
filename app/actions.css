@@ -1,3 +1,5 @@
+.stats.two-stats { grid-template-columns: repeat(2, 1fr); }
+.stats.two-stats article:last-child { display: block; }
 .job-row {
   grid-template-columns: .7fr 2fr 1fr .5fr .9fr 1.2fr;
 }
