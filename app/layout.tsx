@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./styles.css";
 import "./extras.css";
+import "./actions.css";
 
 export const metadata: Metadata = {
   title: "CAM Golf Job Tracker",

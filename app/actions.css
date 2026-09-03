@@ -1,0 +1,25 @@
+.job-row {
+  grid-template-columns: .7fr 2fr 1fr .5fr .9fr 1.2fr;
+}
+
+.job-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .job-row {
+    grid-template-columns: .7fr 1.7fr 1fr 1.3fr;
+  }
+
+  .job-row > span:nth-child(4),
+  .job-row > span:nth-child(5) {
+    display: none;
+  }
+}
+
+@media print {
+  .report-toolbar {
+    display: none !important;
+  }
+}
