@@ -1,0 +1,26 @@
+const fs=require("node:fs"),assert=require("node:assert/strict"),ts=require("typescript");
+const compiled=ts.transpileModule(fs.readFileSync("lib/dictation.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS}}).outputText;
+const mod={exports:{}};new Function("exports","module",compiled)(mod.exports,mod);
+const {startDictation,transcriptText}=mod.exports;
+const results=(...words)=>words.map(([transcript,isFinal=false])=>({0:{transcript},isFinal}));
+assert.equal(transcriptText("Existing.",results(["Changed brake"])),"Existing. Changed brake");
+function fake(){return {start(){this.onstart?.()},stop(){this.onend?.()},abort(){this.aborted=true}}}
+const speech=fake(),texts=[],states=[];
+startDictation({recognition:speech,initialText:"Existing.",onText:t=>texts.push(t),onState:(p,m)=>states.push([p,m])});
+assert.equal(speech.interimResults,true);
+speech.onresult({results:results(["Changed break"])});
+speech.onresult({results:results(["Changed brakes",true])});
+speech.onresult({results:results(["Changed brakes",true])});
+assert.deepEqual(texts,["Existing. Changed break","Existing. Changed brakes","Existing. Changed brakes"]);
+speech.onend();assert.equal(states.at(-1)[0],"idle");assert.match(states.at(-1)[1],/Text added/);
+const interim=fake(),kept=[];
+const run=startDictation({recognition:interim,initialText:"",onText:t=>kept.push(t),onState(){}});
+interim.onresult({results:results(["Check battery"])});run.stop();assert.deepEqual(kept,["Check battery"]);
+const first=fake(),second=fake(),notes=[];
+startDictation({recognition:first,initialText:"",onText(){},onState(){}});
+startDictation({recognition:second,initialText:"",onText(){},onState:(p,m)=>notes.push([p,m])});
+assert.equal(first.aborted,true);assert.equal(first.onresult,null);second.onend();assert.match(notes.at(-1)[1],/No transcription/);
+const failed=fake(),failure=[];
+startDictation({recognition:failed,initialText:"",onText(){},onState:(p,m)=>failure.push([p,m])});
+failed.onerror({error:"network"});assert.match(failure.at(-1)[1],/could not connect/);assert.equal(failed.onend,null);
+console.log("PASS: interim text, final corrections, repeated snapshots, retained text on stop, exclusive microphone, silent end feedback, network errors.");
