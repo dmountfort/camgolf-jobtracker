@@ -1,8 +1,10 @@
 .stats.two-stats { grid-template-columns: repeat(2, 1fr); }
 .stats.two-stats article:last-child { display: block; }
 .job-row {
-  grid-template-columns: .7fr 2fr 1fr .5fr .9fr 1.2fr;
+  grid-template-columns: .7fr 2fr 1fr .5fr .9fr minmax(180px,1.5fr);
 }
+.table-actions { flex-wrap: wrap; }
+.table-actions button { padding: 8px 10px; font-size: .75rem; }
 
 .job-link {
   color: inherit;

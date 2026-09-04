@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   text("Date:",324,688,7,bold); text(job.serviceDate||"",367,688,8);
   text("Travelling Km:",324,665,7,bold); text(job.travellingKm||"",390,665,8);
   text("Duration / Hours:",324,642,7,bold); text(job.durationHours||"",402,642,8);
-  text("Technician:",324,616,7,bold); text(job.technicianName||"",381,616,8); text("Job card Nr:",480,616,7,bold);
+  text("Technician:",324,616,7,bold); text(job.technicianName||"",381,616,8); text("Job card Nr:",468,602,7,bold); text(String(job.jobNumber??""),519,602,7);
 
   text("Work as listed below, was performed on the following units:",42,585,7,bold);
   text("Kindly note comments on the following units:",317,585,7,bold);
