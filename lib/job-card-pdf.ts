@@ -2,9 +2,17 @@ import {PDFDocument,StandardFonts,rgb,type PDFPage} from "pdf-lib";
 export type JobCardData={
  job_number:number|string;invoice_number?:string|null;service_date:string;travelling_km:number|null;duration_hours:number|null;general_notes:string|null;
  customers:{name:string;address?:string|null;telephone?:string|null;email?:string|null}|null;
- job_vehicles:{model?:string|null;amp_hours?:number|string|null;unit_number:string|null;serial_number:string|null;work_performed:string;attention_notes:string|null}[];
- job_parts:{description:string;quantity:number;parts:{part_number:string|null}|null}[];
+ job_vehicles:{id?:string;model?:string|null;amp_hours?:number|string|null;unit_number:string|null;serial_number:string|null;work_performed:string;attention_notes:string|null}[];
+ job_parts:{job_vehicle_id?:string|null;description:string;quantity:number;parts:{part_number:string|null}|null}[];
 };
+export function jobCardPartRows(job:JobCardData){
+ return job.job_parts.map(p=>{
+  const index=job.job_vehicles.findIndex(v=>v.id===p.job_vehicle_id&&Boolean(p.job_vehicle_id));
+  const car=index>=0?job.job_vehicles[index]:null;
+  const label=car?"Car "+(index+1)+(car.unit_number?" / Cart "+car.unit_number:""):"";
+  return [p.parts?.part_number,[label,p.description].filter(Boolean).join("\n"),p.quantity];
+ });
+}
 export async function createJobCardPdf(job:JobCardData){
  const pdf=await PDFDocument.create(),font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
  const black=rgb(.1,.1,.1),border=rgb(.48,.51,.48),shade=rgb(.95,.96,.94),left=36,width=523;
@@ -75,7 +83,7 @@ export async function createJobCardPdf(job:JobCardData){
  table(["Cart","Work performed / items requiring attention"],[85,438],job.job_vehicles.map(v=>[v.unit_number,[v.work_performed,v.attention_notes?"Items requiring attention: "+v.attention_notes:""].filter(Boolean).join("\n")]),4);
  ensure(24);box(left,y,width,22);text("Total labour / hours (whole job):",left+8,y+6,9,true);text(job.duration_hours??"",left+width-70,y+6,9,true);y+=34;
  heading("PARTS USED");
- table(["Part No","Description","Qty"],[100,363,60],job.job_parts.map(p=>[p.parts?.part_number,p.description,p.quantity]),3);
+ table(["Part No","Description","Qty"],[100,363,60],jobCardPartRows(job),3);
  y+=12;
  note("COMMENTS",job.general_notes,45);
  ensure(45);box(left,y,width,40);text("CUSTOMER SIGNATURE:",left+7,y+5,9,true);y+=40;
