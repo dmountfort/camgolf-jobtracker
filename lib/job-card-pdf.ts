@@ -1,10 +1,9 @@
 import {PDFDocument,StandardFonts,rgb,type PDFPage} from "pdf-lib";
 export type JobCardData={
- job_number:number|string;report_number?:string|null;service_date:string;travelling_km:number|null;duration_hours:number|null;general_notes:string|null;
+ job_number:number|string;invoice_number?:string|null;service_date:string;travelling_km:number|null;duration_hours:number|null;general_notes:string|null;
  customers:{name:string;address?:string|null;telephone?:string|null;email?:string|null}|null;
- profiles:{full_name:string}|null;
  job_vehicles:{model?:string|null;amp_hours?:number|string|null;unit_number:string|null;serial_number:string|null;work_performed:string;attention_notes:string|null}[];
- job_parts:{description:string;quantity:number;unit_cost:number;parts:{part_number:string|null}|null}[];
+ job_parts:{description:string;quantity:number;parts:{part_number:string|null}|null}[];
 };
 export async function createJobCardPdf(job:JobCardData){
  const pdf=await PDFDocument.create(),font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
@@ -31,19 +30,24 @@ export async function createJobCardPdf(job:JobCardData){
  function newPage(){
   page=pdf.addPage([595,842]);y=30;
   text("CAM GOLF",left,y,14,true);text("JOB CARD",407,y,14,true);y+=27;
-  box(423,y,136,35);text("JOB CARD NO:",429,y+4,8,true);text(job.job_number,499,y+15,12,true);
-  const customer=wrap(job.customers?.name||"",335,10);
-  text("Customer:",left,y+3,9,true);customer.forEach((s,i)=>text(s,95,y+3+i*12,10));y+=Math.max(27,customer.length*12+7);
-  text("Address:",left,y,9,true);const address=wrap(job.customers?.address||"",319);address.forEach((s,i)=>text(s,95,y+i*12));text("Date:",423,y+13,9,true);text(job.service_date,460,y+13);y+=Math.max(32,address.length*12+8);
-  text("Tel No:",left,y,9,true);text(job.customers?.telephone||"",95,y);
-  text("Labour / hrs:",380,y,9,true);text(job.duration_hours??"",472,y);y+=19;
-  text("Email:",left,y,9,true);wrap(job.customers?.email||"",270).forEach((s,i)=>text(s,95,y+i*11));
-  text("Travel / km:",380,y,9,true);text(job.travelling_km??"",472,y);y+=25;
-  text("Technician:",left,y,9,true);text(job.profiles?.full_name||"",95,y);
-  text("Delivery method:",340,y,8,true);box(423,y-3,68,18);box(491,y-3,68,18);text("Customer",430,y,8);text("CAM Golf",498,y,8);y+=31;
+  const info=[
+   ["Customer",job.customers?.name,"Job card No",job.job_number],
+   ["Address",job.customers?.address,"Date",job.service_date],
+   ["Telephone",job.customers?.telephone,"Labour / hrs",job.duration_hours],
+   ["Email",job.customers?.email,"Travel / km",job.travelling_km],
+   ["Invoice",job.invoice_number,"",""]
+  ];
+  for(const row of info){
+   const widths=[70,245,88,120],cols=row.map((v,i)=>wrap(v,widths[i]-12,9));
+   const height=Math.max(28,Math.max(...cols.map(c=>c.length))*12+12);
+   let x=left;
+   cols.forEach((col,i)=>{box(x,y,widths[i],height);col.forEach((value,n)=>text(value,x+6,y+6+n*12,9,i===0||i===2));x+=widths[i]});
+   y+=height;
+  }
+  y+=16;
  }
  function ensure(h:number){if(y+h>790)newPage()}
- function heading(label:string){ensure(40);box(left,y,width,22);text(label,left+7,y+6,9,true);y+=22}
+ function heading(label:string){ensure(70);box(left,y,width,22);text(label,left+7,y+6,9,true);y+=22}
  function table(headers:string[],widths:number[],rows:unknown[][],minimum=0){
   const drawHeader=()=>{ensure(45);let x=left;headers.forEach((h,i)=>{box(x,y,widths[i],20);text(h,x+5,y+5,8,true);x+=widths[i]});y+=20};
   drawHeader();
@@ -71,10 +75,9 @@ export async function createJobCardPdf(job:JobCardData){
  table(["Cart","Work performed / items requiring attention"],[85,438],job.job_vehicles.map(v=>[v.unit_number,[v.work_performed,v.attention_notes?"Items requiring attention: "+v.attention_notes:""].filter(Boolean).join("\n")]),4);
  ensure(24);box(left,y,width,22);text("Total labour / hours (whole job):",left+8,y+6,9,true);text(job.duration_hours??"",left+width-70,y+6,9,true);y+=34;
  heading("PARTS USED");
- const money=(n:number)=>"R "+Number(n||0).toFixed(2);
- table(["Part No","Description","Qty","Unit cost","Cost"],[73,236,44,80,90],job.job_parts.map(p=>[p.parts?.part_number,p.description,p.quantity,money(p.unit_cost),money(p.quantity*p.unit_cost)]),3);
- ensure(25);box(left,y,width,22);text("PARTS TOTAL",left+8,y+6,9,true);text(money(job.job_parts.reduce((sum,p)=>sum+p.quantity*p.unit_cost,0)),left+width-85,y+6,9,true);y+=34;
- note("SUNDRIES","",28);note("COMMENTS",job.general_notes,45);
+ table(["Part No","Description","Qty"],[100,363,60],job.job_parts.map(p=>[p.parts?.part_number,p.description,p.quantity]),3);
+ y+=12;
+ note("COMMENTS",job.general_notes,45);
  ensure(45);box(left,y,width,40);text("CUSTOMER SIGNATURE:",left+7,y+5,9,true);y+=40;
  pdf.getPages().forEach((p,i)=>p.drawText("CAM Golf | Job card "+clean(job.job_number)+" | Page "+(i+1)+" of "+pdf.getPageCount(),{x:left,y:18,size:7,font,color:black}));
  return pdf.save();

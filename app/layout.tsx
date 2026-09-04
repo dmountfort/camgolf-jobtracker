@@ -7,7 +7,7 @@ import "./field/field.css";
 
 export const metadata: Metadata = {
   title: "CAM Golf Job Tracker",
-  description: "Field job cards, admin review and EZGO reports"
+  description: "Field job cards, admin review and CAM Golf reports"
 };
 
 export default function Layout({ children }: Readonly<{ children: React.ReactNode }>) {
