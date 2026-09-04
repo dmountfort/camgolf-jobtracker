@@ -5,7 +5,8 @@ const base={job_number:2332,invoice_number:"INV-2026-0142",service_date:"2026-09
 base.job_vehicles.push({...base.job_vehicles[0],id:"sample-car-2",unit_number:"22",work_performed:"Fit light kit.",attention_notes:""});
 base.job_parts.push({description:"Older unassigned part",quantity:1,unit_cost:123,parts:{part_number:"OLD"}});
 const rows=mod.exports.jobCardPartRows(base);
-assert.match(rows[0][1],/Car 1 \/ Cart 14/);
-assert.match(rows[1][1],/Car 2 \/ Cart 22/);
-assert.equal(rows[2][1],"Older unassigned part");
+assert.deepEqual(rows[0],["EB-01","14","Rebuilt E-brake",1]);
+assert.deepEqual(rows[1],["RXV","22","Light kit",1]);
+assert.deepEqual(rows[2],["OLD","","Older unassigned part",1]);
+assert.equal(mod.exports.jobCardPartRows({...base,job_vehicles:base.job_vehicles.map(car=>({...car,unit_number:null}))})[0][1],"");
 (async()=>{fs.mkdirSync("tmp/pdfs",{recursive:true});const bytes=await mod.exports.createJobCardPdf(base);fs.writeFileSync("tmp/pdfs/job-card-sample.pdf",bytes);const {PDFDocument}=require("pdf-lib");console.log("Sample pages:",(await PDFDocument.load(bytes)).getPageCount());const stress={...base,job_vehicles:Array.from({length:15},(_,i)=>({...base.job_vehicles[0],unit_number:String(i+1),work_performed:("Detailed service work including brakes, wiring and battery inspection. ").repeat(25)})),general_notes:("Long comments need to wrap safely. ").repeat(100)};const long=await mod.exports.createJobCardPdf(stress);fs.writeFileSync("tmp/pdfs/job-card-long.pdf",long);assert.ok((await PDFDocument.load(long)).getPageCount()>1);console.log("PASS: multi-car, long text and multi-page report generated.");})().catch(e=>{console.error(e);process.exitCode=1});

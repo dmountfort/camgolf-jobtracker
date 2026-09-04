@@ -9,8 +9,7 @@ export function jobCardPartRows(job:JobCardData){
  return job.job_parts.map(p=>{
   const index=job.job_vehicles.findIndex(v=>v.id===p.job_vehicle_id&&Boolean(p.job_vehicle_id));
   const car=index>=0?job.job_vehicles[index]:null;
-  const label=car?"Car "+(index+1)+(car.unit_number?" / Cart "+car.unit_number:""):"";
-  return [p.parts?.part_number,[label,p.description].filter(Boolean).join("\n"),p.quantity];
+  return [p.parts?.part_number,car?.unit_number||"",p.description,p.quantity];
  });
 }
 export async function createJobCardPdf(job:JobCardData){
@@ -83,7 +82,7 @@ export async function createJobCardPdf(job:JobCardData){
  table(["Cart","Work performed / items requiring attention"],[85,438],job.job_vehicles.map(v=>[v.unit_number,[v.work_performed,v.attention_notes?"Items requiring attention: "+v.attention_notes:""].filter(Boolean).join("\n")]),4);
  ensure(24);box(left,y,width,22);text("Total labour / hours (whole job):",left+8,y+6,9,true);text(job.duration_hours??"",left+width-70,y+6,9,true);y+=34;
  heading("PARTS USED");
- table(["Part No","Description","Qty"],[100,363,60],jobCardPartRows(job),3);
+ table(["Part No","Cart No","Description","Qty"],[100,75,288,60],jobCardPartRows(job),3);
  y+=12;
  note("COMMENTS",job.general_notes,45);
  ensure(45);box(left,y,width,40);text("CUSTOMER SIGNATURE:",left+7,y+5,9,true);y+=40;
