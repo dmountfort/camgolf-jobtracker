@@ -4,6 +4,7 @@ import "./extras.css";
 import "./actions.css";
 import "./photos.css";
 import "./field/field.css";
+import "./design.css";
 
 export const metadata: Metadata = {
   title: "CAM Golf Job Tracker",

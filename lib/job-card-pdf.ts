@@ -7,12 +7,12 @@ export type JobCardData={
 };
 export async function createJobCardPdf(job:JobCardData){
  const pdf=await PDFDocument.create(),font=await pdf.embedFont(StandardFonts.Helvetica),bold=await pdf.embedFont(StandardFonts.HelveticaBold);
- const black=rgb(.1,.1,.1),left=36,width=523;
+ const black=rgb(.1,.1,.1),border=rgb(.48,.51,.48),shade=rgb(.95,.96,.94),left=36,width=523;
  const clean=(s:unknown)=>String(s??"").replace(/[–—]/g,"-").replace(/[‘’]/g,"'").replace(/[“”]/g,'"').replace(/[^\x20-\x7e\xa0-\xff\n]/g,"?");
  let page:PDFPage,y=0;
  const text=(s:unknown,x:number,top:number,size=9,heavy=false)=>page.drawText(clean(s),{x,y:842-top-size,size,font:heavy?bold:font,color:black});
  const line=(x:number,top:number,w:number)=>page.drawLine({start:{x,y:842-top},end:{x:x+w,y:842-top},thickness:.6,color:black});
- const box=(x:number,top:number,w:number,h:number)=>page.drawRectangle({x,y:842-top-h,width:w,height:h,borderWidth:.6,borderColor:black});
+ const box=(x:number,top:number,w:number,h:number,shaded=false)=>page.drawRectangle({x,y:842-top-h,width:w,height:h,borderWidth:.5,borderColor:border,...(shaded?{color:shade}:{})});
  function wrap(value:unknown,w:number,size=9){
   const lines:string[]=[];
   for(const paragraph of clean(value).split("\n")){
@@ -41,13 +41,13 @@ export async function createJobCardPdf(job:JobCardData){
    const widths=[70,245,88,120],cols=row.map((v,i)=>wrap(v,widths[i]-12,9));
    const height=Math.max(28,Math.max(...cols.map(c=>c.length))*12+12);
    let x=left;
-   cols.forEach((col,i)=>{box(x,y,widths[i],height);col.forEach((value,n)=>text(value,x+6,y+6+n*12,9,i===0||i===2));x+=widths[i]});
+   cols.forEach((col,i)=>{box(x,y,widths[i],height,(i===0||i===2)&&Boolean(row[i]));col.forEach((value,n)=>text(value,x+6,y+6+n*12,9,i===0||i===2));x+=widths[i]});
    y+=height;
   }
   y+=16;
  }
  function ensure(h:number){if(y+h>790)newPage()}
- function heading(label:string){ensure(70);box(left,y,width,22);text(label,left+7,y+6,9,true);y+=22}
+ function heading(label:string){ensure(70);box(left,y,width,22,true);text(label,left+7,y+6,9,true);y+=22}
  function table(headers:string[],widths:number[],rows:unknown[][],minimum=0){
   const drawHeader=()=>{ensure(45);let x=left;headers.forEach((h,i)=>{box(x,y,widths[i],20);text(h,x+5,y+5,8,true);x+=widths[i]});y+=20};
   drawHeader();
