@@ -6,7 +6,7 @@ import RemoveRecord from "@/app/components/remove-record";
 import { createClient } from "@/lib/supabase";
 
 type Status="draft"|"completed"|"returned"|"under_review"|"closed";
-type JobRow={id:string;job_number:number;invoice_number:string|null;status:Status;service_date:string;updated_at:string;customers:{name:string;address:string|null}|null;sites:{name:string}|null;profiles:{full_name:string}|null;job_vehicles:{count:number}[]};
+type JobRow={id:string;job_number:string;invoice_number:string|null;status:Status;service_date:string;updated_at:string;customers:{name:string;address:string|null}|null;sites:{name:string}|null;profiles:{full_name:string}|null;job_vehicles:{count:number}[]};
 const labels:Record<Status,string>={draft:"Open",completed:"Open",returned:"Open",under_review:"Open",closed:"Closed"};
 
 export default function Dashboard(){
